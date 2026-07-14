@@ -16,6 +16,7 @@
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 // ---- GLB 模型路径映射 ----
 const GLB_PATHS = {
@@ -120,6 +121,9 @@ export function createSprite3D(container, options = {}) {
     modelGroup.add(placeholderMesh);
 
     const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+    loader.setDRACOLoader(dracoLoader);
     loader.load(
       glbPath,
       (gltf) => {

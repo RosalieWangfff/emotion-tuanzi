@@ -1,2 +1,1 @@
-*.glb filter=lfs diff=lfs merge=lfs -text
-*.fbx filter=lfs diff=lfs merge=lfs -text
+# GLB/FBX 文件已压缩，不再需要 LFS

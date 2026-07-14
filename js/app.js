@@ -14,7 +14,7 @@
 import { store, SPRITE_TYPES, PERSONA_TYPES, EMOTIONS, THEMES, BACKGROUNDS, DEFAULT_BACKGROUND_ID, getCustomBackgrounds, addCustomBackground, removeCustomBackground, getAllBackgrounds } from './store.js?v=2';
 import { analyzeText, analyzeTextAI, generateReply, generateReport, callLLMWithSystem, generateChatReply, isAIEnabled, setApiKey, setAIEnabled, getApiKeyMasked } from './emotion.js?v=2';
 import { renderSprite, renderSpritePicker, renderPersonaPicker, spriteSpeak, openFaceCustomizer } from './sprite.js?v=2';
-import { createSprite3D } from './sprite-3d.js?v=3';
+import { createSprite3D } from './sprite-3d.js?v=4';
 import { initDoodle, destroyDoodle } from './doodle.js';
 import { initMap, addRecordMarkers, initLocationPicker, getSelectedLocation, destroyLocationPicker, getCurrentLocation } from './map.js';
 import { initVoice, getVoiceResult } from './voice.js';
