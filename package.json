@@ -1,0 +1,14 @@
+{
+  "name": "emotion-tuanzi",
+  "version": "1.0.0",
+  "description": "情绪团子 — 情绪陪伴精灵的 3D 交互式应用",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

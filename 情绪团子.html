@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>情绪团子 — 精灵陪伴的情绪地图与涂鸦日记</title>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<!-- App Styles -->
+<link rel="stylesheet" href="css/style.css">
+
+<!-- Three.js Importmap（ES Module 版）-->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- ========== Phone Frame (Desktop Demo) ========== -->
+<div id="phone-frame">
+<div id="app">
+
+<!-- ========== Side Navigation ========== -->
+<nav class="side-nav" id="side-nav">
+  <div class="side-nav-logo">团</div>
+  <button class="side-nav-item" data-nav="home" title="精灵之家">
+    <span class="side-nav-icon">🏠</span>
+    <span class="side-nav-text">之家</span>
+  </button>
+  <button class="side-nav-item" data-nav="map" title="情绪地图">
+    <span class="side-nav-icon">🗺️</span>
+    <span class="side-nav-text">地图</span>
+  </button>
+  <button class="side-nav-item" data-nav="timeline" title="时间线">
+    <span class="side-nav-icon">📅</span>
+    <span class="side-nav-text">时间</span>
+  </button>
+  <button class="side-nav-item" data-nav="report" title="情绪报告">
+    <span class="side-nav-icon">📊</span>
+    <span class="side-nav-text">报告</span>
+  </button>
+  <button class="side-nav-item" data-nav="photo" title="记忆相册">
+    <span class="side-nav-icon">📸</span>
+    <span class="side-nav-text">相册</span>
+  </button>
+</nav>
+
+<div class="view-stage">
+
+<!-- ========== Onboarding View ========== -->
+<div id="view-onboarding" class="view hidden">
+  <div class="onboarding-container">
+    <div class="onboarding-step" data-step="1">
+      <div class="onboarding-header">
+        <div class="onboarding-logo">情绪团子</div>
+        <div class="onboarding-subtitle">一款精灵陪伴的情绪地图与涂鸦日记</div>
+      </div>
+      <div class="onboarding-sprite-preview" id="onboarding-sprite"></div>
+      <h2 class="onboarding-title">选择你的小精灵</h2>
+      <p class="onboarding-desc">它会陪你记录、陪你画、替你记住。</p>
+      <div class="sprite-picker" id="sprite-picker"></div>
+    </div>
+
+    <div class="onboarding-step hidden" data-step="2">
+      <h2 class="onboarding-title">给精灵起个名字</h2>
+      <p class="onboarding-desc">它会用这个名字陪你说话。</p>
+      <input type="text" id="sprite-name-input" class="onboarding-input" placeholder="小团子" maxlength="10">
+    </div>
+
+    <div class="onboarding-step hidden" data-step="3">
+      <h2 class="onboarding-title">选择精灵的性格</h2>
+      <p class="onboarding-desc">可以选择预设性格，或自己写一段性格描述。</p>
+      <div class="persona-picker" id="persona-picker"></div>
+      <div class="onboarding-persona-custom">
+        <div class="persona-divider"><span>或自定义性格</span></div>
+        <div class="persona-template-bar">
+          <button type="button" class="btn-ghost" id="onboard-persona-template-btn">插入性格模板</button>
+          <button type="button" class="btn-ghost" id="onboard-persona-example-btn">看个示例</button>
+        </div>
+        <textarea id="onboard-custom-persona" class="persona-textarea" rows="6" placeholder="可以直接写一段性格描述，或点击「插入性格模板」用五层结构填写…"></textarea>
+        <label class="persona-toggle">
+          <input type="checkbox" id="onboard-persona-enabled">
+          <span>启用自定义性格（覆盖上方预设）</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="onboarding-nav">
+      <button class="btn-ghost" id="onboard-back">返回</button>
+      <button class="btn-primary" id="onboard-next">下一步</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Main View (Map Home) ========== -->
+<div id="view-main" class="view hidden">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="top-bar-title">情绪地图</div>
+    <button class="top-bar-btn" id="btn-sprite-settings" title="精灵设置">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <!-- Map Container -->
+  <div id="map"></div>
+
+  <!-- Record FAB (inside map page) -->
+  <div class="fab-container">
+    <div class="fab-menu hidden" id="fab-menu">
+      <button class="fab-item" data-route="doodle">
+        <span class="fab-icon">🎨</span>
+        <span class="fab-label">涂鸦</span>
+      </button>
+      <button class="fab-item" data-route="voice">
+        <span class="fab-icon">🎙️</span>
+        <span class="fab-label">语音</span>
+      </button>
+      <button class="fab-item" data-route="write">
+        <span class="fab-icon">✍️</span>
+        <span class="fab-label">手写</span>
+      </button>
+      <button class="fab-item" data-route="photo">
+        <span class="fab-icon">📸</span>
+        <span class="fab-label">相册</span>
+      </button>
+    </div>
+    <button class="fab-main" id="fab-toggle">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<!-- ========== Sprite Home View ========== -->
+<div id="view-home" class="view hidden">
+  <!-- 时间场景背景 -->
+  <div class="scene-bg" id="scene-bg">
+    <div class="scene-clouds" id="scene-clouds"></div>
+    <div class="scene-stars" id="scene-stars"></div>
+    <div class="scene-ground" id="scene-ground"></div>
+  </div>
+
+  <div class="top-bar home-top-bar">
+    <div class="top-bar-title">精灵之家</div>
+    <div class="home-top-actions">
+      <button class="top-bar-btn" id="btn-home-background" title="房间背景">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </button>
+      <button class="top-bar-btn" id="btn-home-settings" title="精灵设置">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="home-layout">
+    <!-- 主场景：精灵居中（背景图待用户提供后贴入） -->
+    <div class="home-sprite-area">
+      <!-- 房间背景图层（最底层）-->
+      <div class="home-bg-image" id="home-bg-image"></div>
+      <div class="home-sprite-bubble" id="home-bubble"></div>
+      <div class="home-mini-chat" id="home-mini-chat">
+        <input type="text" id="home-chat-input" class="home-chat-input" placeholder="想跟团子说点什么…" autocomplete="off">
+        <button class="home-chat-send" id="home-chat-send" title="发送">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="home-sprite-stage" id="home-sprite-stage" style="perspective:800px">
+        <div class="home-sprite-avatar" id="home-sprite-avatar"></div>
+        <div class="home-sprite-shadow"></div>
+      </div>
+      <div class="home-sprite-name" id="home-sprite-name"></div>
+      <div class="home-actions home-actions-grid">
+        <button class="home-action-btn" data-route="doodle">
+          <span class="home-action-icon">🎨</span>
+          <span class="home-action-label">画一画</span>
+        </button>
+        <button class="home-action-btn" data-route="voice">
+          <span class="home-action-icon">🎙️</span>
+          <span class="home-action-label">说一说</span>
+        </button>
+        <button class="home-action-btn" data-route="write">
+          <span class="home-action-icon">✍️</span>
+          <span class="home-action-label">写一写</span>
+        </button>
+        <button class="home-action-btn" data-route="photo">
+          <span class="home-action-icon">📸</span>
+          <span class="home-action-label">拍一拍</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 左抽拉：天气 + 统计（从左边缘滑出） -->
+    <div class="home-drawer home-drawer-left" id="drawer-left">
+      <button class="home-drawer-tab" id="tab-left" title="天气与统计">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>
+        <span class="home-drawer-tab-label">今日</span>
+      </button>
+      <div class="home-drawer-content">
+        <div class="home-module" id="home-weather"></div>
+        <div class="home-stats" id="home-stats"></div>
+        <div class="emotion-panel" id="home-emotion-panel"></div>
+      </div>
+    </div>
+
+    <!-- 右抽拉：团子回信（从右边缘滑出） -->
+    <div class="home-drawer home-drawer-right" id="drawer-right">
+      <button class="home-drawer-tab" id="tab-right" title="团子回信">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="home-drawer-tab-label">回信</span>
+      </button>
+      <div class="home-drawer-content">
+        <div class="home-module home-reply-card" id="home-reply-card"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 房间背景选择弹出层 -->
+  <div class="home-bg-picker hidden" id="home-bg-picker">
+    <div class="home-bg-picker-header">
+      <span class="home-bg-picker-title">选择房间背景</span>
+      <button class="home-bg-picker-close" id="home-bg-picker-close" title="关闭">×</button>
+    </div>
+    <div class="home-bg-picker-grid" id="home-bg-picker-grid">
+      <!-- 缩略图由 JS 动态渲染 -->
+    </div>
+    <div class="home-bg-picker-hint">把新图片放到 backgrounds/ 文件夹即可</div>
+  </div>
+</div>
+
+<!-- ========== Doodle View ========== -->
+<div id="view-doodle" class="view hidden">
+  <div class="page-header">
+    <button class="back-btn" data-back>←</button>
+    <span class="page-title">涂鸦记录</span>
+    <button class="page-action" id="doodle-save">保存</button>
+  </div>
+  <div class="emotion-indicator" id="doodle-emotion">
+    <span class="emotion-emoji">🌸</span>
+    <span class="emotion-label">开始画吧</span>
+    <div class="emotion-bar"><div class="emotion-bar-fill" style="width:0%"></div></div>
+  </div>
+  <canvas id="doodle-canvas"></canvas>
+  <div class="doodle-tools">
+    <div class="tool-group">
+      <button class="tool-btn active" data-tool="brush" title="画笔">🖌️</button>
+      <button class="tool-btn" data-tool="eraser" title="橡皮">🧹</button>
+      <button class="tool-btn" id="tool-clear" title="清空">🗑️</button>
+    </div>
+    <div class="brush-style-group" id="brush-style-group">
+      <button class="brush-style-btn active" data-brush="standard" title="标准（干净笔画）">标准</button>
+      <button class="brush-style-btn" data-brush="material" title="材质笔刷（模拟木纹/金属/布料纹理）">材质</button>
+      <button class="brush-style-btn" data-brush="pattern" title="花纹笔刷（装饰图案拖尾）">花纹</button>
+    </div>
+    <div class="color-palette" id="color-palette">
+      <button class="color-swatch active" data-color="#3A3A3A" style="--c:#3A3A3A" title="墨黑"></button>
+      <button class="color-swatch" data-color="#E07A5F" style="--c:#E07A5F" title="珊瑚橘"></button>
+      <button class="color-swatch" data-color="#F7B267" style="--c:#F7B267" title="暖阳黄"></button>
+      <button class="color-swatch" data-color="#80D6AF" style="--c:#80D6AF" title="薄荷绿"></button>
+      <button class="color-swatch" data-color="#6B9BD2" style="--c:#6B9BD2" title="天空蓝"></button>
+      <button class="color-swatch" data-color="#B9A8D9" style="--c:#B9A8D9" title="薰衣草紫"></button>
+      <button class="color-swatch" data-color="#F9B2C0" style="--c:#F9B2C0" title="樱花粉"></button>
+      <button class="color-swatch" data-color="#A89595" style="--c:#A89595" title="奶茶棕"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Voice View ========== -->
+<div id="view-voice" class="view hidden">
+  <div class="page-header">
+    <button class="back-btn" data-back>←</button>
+    <span class="page-title">语音倾诉</span>
+    <button class="page-action hidden" id="voice-save">保存</button>
+  </div>
+  <div class="voice-container">
+    <div class="voice-wave-container" id="voice-wave"></div>
+    <div class="voice-transcript" id="voice-transcript">
+      <p class="voice-hint">按住下方按钮开始说话</p>
+    </div>
+    <div class="voice-emotion hidden" id="voice-emotion"></div>
+    <button class="voice-record-btn" id="voice-record">
+      <span class="voice-record-icon">🎙️</span>
+      <span class="voice-record-text">按住说话</span>
+    </button>
+  </div>
+</div>
+
+<!-- ========== Write View ========== -->
+<div id="view-write" class="view hidden">
+  <div class="page-header">
+    <button class="back-btn" data-back>←</button>
+    <span class="page-title">写日记</span>
+    <button class="page-action" id="write-submit">发送</button>
+  </div>
+  <div class="write-container">
+    <div class="write-emotion-picker" id="write-emotion-picker">
+      <span class="write-emotion-picker-label">现在的心情是？</span>
+      <div class="write-emotion-chips" id="write-emotion-chips">
+        <button class="write-emotion-chip" data-emotion="joy">😊 开心</button>
+        <button class="write-emotion-chip" data-emotion="calm">😌 平静</button>
+        <button class="write-emotion-chip" data-emotion="sadness">😢 难过</button>
+        <button class="write-emotion-chip" data-emotion="anger">😠 生气</button>
+        <button class="write-emotion-chip" data-emotion="anxiety">😰 焦虑</button>
+        <button class="write-emotion-chip" data-emotion="fatigue">😮‍💨 疲惫</button>
+      </div>
+      <span class="write-emotion-auto-hint hidden" id="write-emotion-auto-hint"></span>
+    </div>
+    <textarea id="write-textarea" class="write-textarea" placeholder="今天怎么样？随便写写..." rows="8"></textarea>
+    <div class="write-meta">
+      <span id="write-count">0 字</span>
+      <span id="write-emotion-tag" class="emotion-tag hidden"></span>
+    </div>
+  </div>
+  <div class="reply-container hidden" id="reply-container">
+    <div class="reply-header">
+      <div class="reply-avatar" id="reply-sprite"></div>
+      <span class="reply-name" id="reply-name">小团子</span>
+    </div>
+    <div class="reply-body" id="reply-body"></div>
+    <button class="btn-primary btn-save-reply" id="write-save">封存进瓶子</button>
+  </div>
+</div>
+
+<!-- ========== Photo View ========== -->
+<div id="view-photo" class="view hidden">
+  <div class="page-header">
+    <button class="back-btn" data-back>←</button>
+    <span class="page-title">上传照片</span>
+    <button class="page-action hidden" id="photo-save">保存</button>
+  </div>
+  <div class="photo-container">
+    <div class="photo-upload-area" id="photo-upload">
+      <span class="photo-upload-icon">📷</span>
+      <p>点击拍照或选择照片</p>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" hidden>
+    </div>
+    <div class="photo-preview hidden" id="photo-preview">
+      <img id="photo-img" alt="预览">
+    </div>
+    <div class="photo-emotion-picker hidden" id="photo-emotion-picker">
+      <p class="picker-title">这张照片让你什么感觉？</p>
+      <div class="emoji-row" id="photo-emojis"></div>
+    </div>
+    <textarea id="photo-caption" class="photo-caption hidden" placeholder="给这张照片写点什么..." rows="3"></textarea>
+  </div>
+</div>
+
+<!-- ========== Album View (拼贴照片墙) ========== -->
+<div id="view-album" class="view hidden">
+  <div class="page-header">
+    <button class="back-btn" data-back>←</button>
+    <span class="page-title">记忆相册</span>
+    <button class="page-action" id="album-add">＋ 上传</button>
+  </div>
+  <div class="album-container" id="album-wall"></div>
+</div>
+
+<!-- ========== Review View (Bottle Detail) ========== -->
+<div id="view-review" class="view hidden">
+  <div class="page-header">
+    <button class="back-btn" data-back>←</button>
+    <span class="page-title">记忆瓶</span>
+    <button class="page-action" id="review-seal">封存</button>
+  </div>
+  <div class="review-container" id="review-content"></div>
+</div>
+
+<!-- ========== Report View (情绪报纸) ========== -->
+<div id="view-report" class="view hidden">
+  <div class="page-header">
+    <button class="back-btn" data-back>←</button>
+    <span class="page-title">情绪小报</span>
+  </div>
+  <div class="report-container" id="report-container">
+    <div class="report-period-toggle">
+      <button class="period-btn active" data-period="week">本周</button>
+      <button class="period-btn" data-period="month">本月</button>
+    </div>
+    <div class="newspaper" id="newspaper"></div>
+  </div>
+</div>
+
+<!-- ========== Timeline View ========== -->
+<div id="view-timeline" class="view hidden">
+  <div class="page-header">
+    <button class="back-btn" data-back>←</button>
+    <span class="page-title" id="timeline-page-title">手账日记</span>
+    <button class="page-action hidden" id="timeline-back-btn">返回</button>
+  </div>
+
+  <!-- 第一层：时间选项列表 -->
+  <div class="timeline-list-view" id="timeline-list-view">
+    <div class="timeline-granularity-toggle">
+      <button class="gran-btn active" data-gran="day">按天</button>
+      <button class="gran-btn" data-gran="week">按周</button>
+      <button class="gran-btn" data-gran="month">按月</button>
+    </div>
+    <div class="timeline-list" id="timeline-list"></div>
+  </div>
+
+  <!-- 第二层：该时间段的记录列表 -->
+  <div class="timeline-records-view hidden" id="timeline-records-view">
+    <div class="timeline-records-list" id="timeline-records-list"></div>
+  </div>
+
+  <!-- 第三层：单条记录手账页 -->
+  <div class="timeline-journal-view hidden" id="timeline-journal-view">
+    <div class="journal-toolbar">
+      <div class="font-switcher">
+        <span class="font-label">字</span>
+        <button class="font-btn active" data-font="default">默认</button>
+        <button class="font-btn" data-font="hand">手写</button>
+        <button class="font-btn" data-font="serif">宋体</button>
+        <button class="font-btn" data-font="kai">楷体</button>
+      </div>
+      <div class="journal-tool-group">
+        <button class="journal-tool-btn" id="doodle-toggle" title="在手账上涂鸦">✏️ 涂鸦</button>
+        <button class="journal-tool-btn" id="doodle-clear" title="清空涂鸦">🧹 清除</button>
+        <button class="journal-tool-btn" id="sticker-toggle" title="贴纸库">� 贴纸</button>
+      </div>
+    </div>
+    <div class="journal-page" id="journal-page">
+      <div class="journal-paper" id="journal-paper">
+        <div class="journal-content" id="journal-content"></div>
+        <canvas class="journal-doodle-canvas" id="journal-doodle-canvas"></canvas>
+        <div class="placed-stickers-layer" id="journal-sticker-layer"></div>
+      </div>
+    </div>
+    <!-- 贴纸工具抽屉 -->
+    <div class="sticker-drawer hidden" id="sticker-drawer">
+      <div class="sticker-drawer-head">
+        <span>贴纸库</span>
+        <label class="sticker-upload-label">＋ 上传
+          <input type="file" id="sticker-upload" accept="image/*" hidden>
+        </label>
+        <button class="sticker-drawer-close" id="sticker-drawer-close">×</button>
+      </div>
+      <div class="sticker-drawer-list" id="sticker-drawer-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Sprite Settings View ========== -->
+<div id="view-sprite-settings" class="view hidden">
+  <div class="page-header">
+    <button class="back-btn" data-back>←</button>
+    <span class="page-title">精灵设置</span>
+  </div>
+  <div class="settings-container">
+    <div class="settings-sprite-preview" id="settings-sprite"></div>
+    <div class="settings-section">
+      <h3>外观</h3>
+      <div class="sprite-picker small" id="settings-sprite-picker"></div>
+    </div>
+    <div class="settings-section">
+      <h3>名字</h3>
+      <input type="text" id="settings-name" class="onboarding-input" maxlength="10">
+    </div>
+    <div class="settings-section">
+      <h3>性格</h3>
+      <div class="persona-picker" id="settings-persona-picker"></div>
+    </div>
+    <div class="settings-section">
+      <h3>自定义性格设定</h3>
+      <p class="settings-hint">在这里写下你想要的精灵性格规则。这段设定会成为精灵的"人格底色"，它的回信、闲话、语气都会围绕它展开。参考「女娲.skill」的五层人格蒸馏法。</p>
+      <div class="persona-template-bar">
+        <button type="button" class="btn-ghost" id="persona-template-btn">插入性格模板</button>
+        <button type="button" class="btn-ghost" id="persona-example-btn">看个示例</button>
+      </div>
+      <textarea id="settings-custom-persona" class="persona-textarea" rows="10" placeholder="可以直接写一段性格描述，或点击「插入性格模板」用五层结构填写…"></textarea>
+      <label class="persona-toggle">
+        <input type="checkbox" id="settings-persona-enabled">
+        <span>启用自定义性格（覆盖上方预设）</span>
+      </label>
+    </div>
+    <div class="settings-section">
+      <h3>AI 对话</h3>
+      <p class="settings-hint">填入豆包 API key 后，团子的回信、首页对话都会用 AI 生成有上下文的回复（能提到你说过的具体事）。不填也能用，团子会用本地关键词引擎回应你。</p>
+      <div class="ai-key-row">
+        <input type="text" id="settings-api-key" class="ai-key-input" placeholder="粘贴豆包 API key（ark.cn-beijing.volces.com）">
+        <button type="button" class="btn-ghost" id="ai-key-clear">清除</button>
+      </div>
+      <label class="persona-toggle">
+        <input type="checkbox" id="settings-ai-enabled">
+        <span>启用 AI 对话（不勾选则即使有 key 也用本地引擎）</span>
+      </label>
+      <div class="ai-status" id="ai-status-hint"></div>
+    </div>
+    <div class="settings-section">
+      <h3>陪伴统计</h3>
+      <div class="stats-grid" id="sprite-stats"></div>
+    </div>
+    <div class="settings-section">
+      <h3>背景主题</h3>
+      <div class="theme-picker" id="theme-picker"></div>
+    </div>
+    <div class="settings-section">
+      <h3>我的房间背景</h3>
+      <p class="settings-hint">上传你喜欢的图片作为房间背景（会自动压缩到合适尺寸）。最多支持 6 张，存在浏览器本地。</p>
+      <div class="custom-bg-upload">
+        <input type="file" id="custom-bg-input" accept="image/*" hidden>
+        <button type="button" class="btn-ghost" id="custom-bg-upload-btn">+ 上传图片</button>
+      </div>
+      <div class="custom-bg-grid" id="custom-bg-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Toast ========== -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- ========== Location Picker Modal ========== -->
+<div id="modal-location" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>选择位置</span>
+      <button class="modal-close" data-close>✕</button>
+    </div>
+    <div class="location-search-bar">
+      <input type="text" id="location-search" placeholder="搜索地点（如：外滩、星巴克）">
+      <button id="location-search-btn">搜索</button>
+    </div>
+    <div class="location-search-results hidden" id="location-search-results"></div>
+    <div id="location-map" class="location-map"></div>
+    <div class="location-info">
+      <input type="text" id="location-name" placeholder="给这个地方起个名（如：公司、家）">
+      <button class="btn-primary" id="location-confirm">确认位置</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Face Customizer Modal (捏脸) ========== -->
+<div id="modal-face" class="modal hidden">
+  <div class="modal-content face-modal-content">
+    <div class="modal-header">
+      <span>捏脸小屋</span>
+      <button class="modal-close" data-close>✕</button>
+    </div>
+
+    <!-- 模式切换 -->
+    <div class="face-mode-tabs">
+      <button class="face-mode-tab active" id="face-mode-parts">🎨 捏脸</button>
+      <button class="face-mode-tab" id="face-mode-photo">📷 上传照片</button>
+      <button class="face-mode-tab face-mode-random" id="face-random" title="随机一个">🎲</button>
+    </div>
+
+    <div class="face-layout">
+      <!-- 左侧预览 -->
+      <div class="face-preview">
+        <div id="face-preview-sprite"></div>
+      </div>
+
+      <!-- 右侧控制面板 -->
+      <div class="face-controls">
+        <!-- 捏脸面板 -->
+        <div id="face-parts-panel" class="face-panel">
+          <!-- 分类标签栏（动态生成） -->
+          <div class="face-category-tabs" id="face-category-tabs"></div>
+          <!-- 各分类面板（动态生成） -->
+          <div class="face-cat-panels" id="face-cat-panels"></div>
+        </div>
+
+        <!-- 上传照片面板 -->
+        <div id="face-photo-panel" class="face-panel hidden">
+          <div class="face-photo-area">
+            <label class="face-photo-upload" for="face-photo-input">
+              <span class="face-photo-icon">📷</span>
+              <span>选择一张照片</span>
+              <span class="face-photo-hint" id="face-photo-hint">未来会通过 seedream 等 API 转成动森风</span>
+            </label>
+            <input type="file" id="face-photo-input" accept="image/*" hidden>
+            <button class="btn-ghost face-photo-clear" id="face-photo-clear">清除照片</button>
+          </div>
+          <div class="face-photo-note">
+            <p>· 照片会被裁剪为圆形头像。</p>
+            <p>· 动森风转换 API 待接入，目前直接使用原图。</p>
+            <p>· 保存后可在精灵之家与所有页面看到你的自定义精灵。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="face-footer">
+      <button class="btn-primary" id="face-save">保存为我的精灵</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Journal Editor Modal (手账编辑: 贴纸/涂鸦/手写批注) ========== -->
+<div id="modal-journal-edit" class="modal hidden">
+  <div class="modal-content journal-edit-content">
+    <div class="modal-header">
+      <span>装饰这一刻</span>
+      <button class="modal-close" data-close>✕</button>
+    </div>
+
+    <!-- 当前记录预览 -->
+    <div class="je-preview" id="je-preview"></div>
+
+    <!-- Tab 切换 -->
+    <div class="je-tabs">
+      <button class="je-tab active" data-tab="sticker">🌸 贴纸</button>
+      <button class="je-tab" data-tab="doodle">🎨 涂鸦</button>
+      <button class="je-tab" data-tab="note">✍️ 批注</button>
+    </div>
+
+    <!-- 贴纸面板 -->
+    <div class="je-panel" data-panel="sticker">
+      <div class="je-sticker-grid" id="je-sticker-grid"></div>
+      <div class="je-section-title">已添加（点击移除）</div>
+      <div class="je-sticker-added" id="je-sticker-added"></div>
+    </div>
+
+    <!-- 涂鸦面板 -->
+    <div class="je-panel hidden" data-panel="doodle">
+      <canvas id="je-doodle-canvas" width="320" height="160"></canvas>
+      <div class="je-doodle-tools">
+        <label class="je-color-pick">画笔颜色
+          <input type="color" id="je-doodle-color" value="#5A6A5A">
+        </label>
+        <button class="btn-ghost" id="je-doodle-clear">清空</button>
+      </div>
+    </div>
+
+    <!-- 批注面板 -->
+    <div class="je-panel hidden" data-panel="note">
+      <textarea id="je-note-input" class="je-note-input" placeholder="在这里写一句话..." rows="4"></textarea>
+    </div>
+
+    <div class="face-footer">
+      <button class="btn-primary" id="je-save">保存装饰</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /.view-stage -->
+
+</div><!-- /#app -->
+</div><!-- /#phone-frame -->
+
+<!-- ========== Scripts ========== -->
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- App JS (ES6 Modules) -->
+<script type="module" src="js/app.js?v=20260713h"></script>
+</body>
+</html>
