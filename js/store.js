@@ -67,7 +67,7 @@ export function getAllBackgrounds() {
 
 // ---- 精灵外观定义 ----
 export const SPRITE_TYPES = {
-  preset1:  { name: '团子',   image: '5f2f804e447fb2eab7b1ec15bfe2e0d9.png', emoji: '🧸' },
+  preset1:  { name: '团子',   image: 'character/团子.jpg', emoji: '🧸' },
   preset2:  { name: '小可',   image: 'character/character1.jpg', emoji: '🎀' },
   cat:      { name: '小猫',   image: 'character/cat.jpg', emoji: '🐱' },
   dog:      { name: '小狗',   image: 'character/dog.png', emoji: '🐶' },

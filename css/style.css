@@ -1026,18 +1026,18 @@ textarea{resize:none}
   transition:width .5s ease;
 }
 .doodle-tools{
-  display:flex;flex-direction:column;gap:10px;
-  padding:10px 16px;flex-shrink:0;
+  display:flex;flex-direction:column;gap:8px;
+  padding:8px 12px;flex-shrink:0;
   background:rgba(255,255,255,0.6);backdrop-filter:blur(10px);
-  border-top:1px solid var(--card-border);
+  border-bottom:1px solid var(--card-border);
 }
 .tool-group{
-  display:flex;justify-content:center;gap:12px;
+  display:flex;justify-content:center;gap:10px;
 }
 .tool-btn{
-  width:40px;height:40px;border-radius:50%;
+  width:34px;height:34px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:18px;background:var(--card-bg);
+  font-size:15px;background:var(--card-bg);
   transition:all .2s;
 }
 .tool-btn:active{transform:scale(0.9)}
@@ -1047,7 +1047,7 @@ textarea{resize:none}
   display:flex;justify-content:center;gap:6px;
 }
 .brush-style-btn{
-  padding:6px 14px;border-radius:100px;font-size:12px;font-weight:600;
+  padding:4px 10px;border-radius:100px;font-size:11px;font-weight:600;
   background:var(--card-bg);border:1.5px solid var(--card-border);
   color:var(--text-tertiary);transition:all .15s;cursor:pointer;
 }
@@ -1058,10 +1058,10 @@ textarea{resize:none}
 }
 /* 颜色选择器 */
 .color-palette{
-  display:flex;justify-content:center;flex-wrap:wrap;gap:8px;
+  display:flex;justify-content:center;flex-wrap:wrap;gap:6px;
 }
 .color-swatch{
-  width:26px;height:26px;border-radius:50%;
+  width:22px;height:22px;border-radius:50%;
   background:var(--c);border:2px solid rgba(255,255,255,0.8);
   box-shadow:0 1px 4px rgba(0,0,0,0.12);
   transition:all .2s;cursor:pointer;padding:0;
